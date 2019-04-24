@@ -16,7 +16,7 @@ class preProcessing:
         df.dropna(how='any', inplace=True)
 
         # Remove tags
-        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("<.*?>", '', x))
+        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("<.*?>", ' ', x))
 
         # Remove URLs
         df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("https?://[A-Za-z0-9./]+", '', x))
@@ -31,6 +31,9 @@ class preProcessing:
 
         # lowerCase
         df['Tweet'] = df['Tweet'].apply(lambda x: ' '.join([word.lower() for word in x.split()]))
+        
+        #remove @mentions
+        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("@.*?\s", ' ', x))
 
         # remove punctuation
         df['Tweet'] = df['Tweet'].apply(self.__removePunctuation)
