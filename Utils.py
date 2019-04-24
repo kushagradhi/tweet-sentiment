@@ -1,6 +1,9 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import precision_recall_fscore_support
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from sklearn.model_selection import GridSearchCV
+import multiprocessing
 import numpy as np
 
 
@@ -50,3 +53,17 @@ def WordEmbeddingsPreTrained(corpus):
             count += 1
             embedding_matrix[index] = embedding_vector
     return embedding_matrix
+
+def updateMetrics(yTrue, yPred,prf):
+    result = precision_recall_fscore_support(yTrue, yPred, average=None, labels=[-1,0,1])
+    for i in range(3):
+        prf[i][0] += result[i][0]
+        prf[i][1] += result[i][1]
+        prf[i][2] += result[i][2]
+
+def gridSearch(model,x_train,y_train):
+    cores = multiprocessing.cpu_count() - 1
+    param = {'C': np.linspace(0.10, 0.2, num=51)}
+    g = GridSearchCV(model, param_grid=param, n_jobs=cores, cv=10)
+    g.fit(x_train, y_train)
+    print(g.best_params_)

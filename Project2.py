@@ -8,11 +8,15 @@ from NaiveBayes import NaiveBayes
 from LogisticRegression import LogisticRegress
 from NeuralNetwork import FeedForward
 from RNN import RNN
-from Utils import TF_IDF, Word2Vec, WordEmbeddingsPreTrained
+from SVM import SVM
+from Utils import TF_IDF, Word2Vec, WordEmbeddingsPreTrained, updateMetrics
+from imblearn.over_sampling import SMOTE,ADASYN
+from imblearn.under_sampling import RandomUnderSampler
+from collections import Counter
 
 filename = "data/trainingObamaRomneytweets.xlsx"
 
-for sheet in ['Obama','Romney']:
+for sheet in ['Romney','Obama']:
     print ("Sentiment Analysis on :",sheet)
     columns = [3, 4]
     df = pd.read_excel(filename, sheet_name=sheet, usecols=columns, header=1, names=['Tweet', 'Sentiment'])
@@ -22,19 +26,23 @@ for sheet in ['Obama','Romney']:
     labels = [int(sentiment) for sentiment in df["Sentiment"]]
 
     kf = StratifiedKFold(n_splits=10)
-    models = ['RNN'] #'NaiveBayes','LogisticRegression','FeedForward','RNN'
-    feature = 'WordEmbeddings'
-    total = np.zeros([len(models),10])
+    models = ['LogisticRegression'] #'NaiveBayes','LogisticRegression','FeedForward','RNN', 'SVM'
+    feature = 'TF_IDF'
+    total = np.zeros([len(models),10]) # Accuracy, Precision, Recall, FScore
+    prf = np.zeros([len(models),3,3])
     fold=0
-
 
     if feature == "WordEmbeddings":
         embed_matrix = WordEmbeddingsPreTrained(corpus)
+    iteration = 1
     for train_index, test_index in kf.split(corpus, labels):
+        print ("K-Fold Iteration: ",iteration)
+        iteration += 1
         X_train = [corpus[i] for i in train_index]
         X_test = [corpus[i] for i in test_index]
         y_train = [labels[i] for i in train_index]
         y_test = [labels[i] for i in test_index]
+
 
         if feature == 'TF_IDF':
             train_corpus,test_corpus = TF_IDF(X_train,X_test)
@@ -46,12 +54,22 @@ for sheet in ['Obama','Romney']:
         else:
             train_corpus, test_corpus,vocab_size,max_length = Word2Vec(X_train,X_test,y_train,y_test)
 
+
+        #print("Before Over Sampling: ",Counter(y_train))
+        #sm = SMOTE(random_state=42)
+        #train_corpus, y_train = sm.fit_resample(train_corpus, y_train)
+        #print("After Over Sampling: ", Counter(y_train))
+
+
         for i,v in enumerate(models):
             if v == 'NaiveBayes':
                 model = NaiveBayes(train_corpus,test_corpus,y_train)
                 result = model.evaluate()
             elif v == 'LogisticRegression':
                 model = LogisticRegress(train_corpus,test_corpus,y_train)
+                result = model.evaluate()
+            elif v == 'SVM':
+                model = SVM(train_corpus, test_corpus, y_train)
                 result = model.evaluate()
             elif v == 'FeedForward':
                 y_train_one = np.array(y_train)
@@ -75,7 +93,9 @@ for sheet in ['Obama','Romney']:
             else:
                 exit()
             accuracy = accuracy_score(y_test, result)
+            updateMetrics(y_test,result,prf[i]);
             total[i][fold] = accuracy
         fold += 1
-    print (total)
-    print(np.mean(total,axis=1))
+    print("Accuracy: ",np.mean(total,axis=1))
+    print ("PRF")
+    print (prf/10)
