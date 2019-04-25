@@ -4,8 +4,7 @@ from Utils import gridSearch
 
 class LogisticRegress:
     def __init__(self,x_train,x_test,y_train):
-        cores = multiprocessing.cpu_count() - 1
-        self.model = LogisticRegression(C=0.8,max_iter=1000,solver='liblinear',multi_class='ovr')
+        self.model = LogisticRegression(C=0.8,max_iter=1000,solver='saga',penalty='l1',multi_class='ovr')
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test

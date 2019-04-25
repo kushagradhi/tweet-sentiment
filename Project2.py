@@ -9,25 +9,29 @@ from LogisticRegression import LogisticRegress
 from NeuralNetwork import FeedForward
 from RNN import RNN
 from SVM import SVM
+from CNN import CNN
 from Utils import TF_IDF, Word2Vec, WordEmbeddingsPreTrained, updateMetrics
 from imblearn.over_sampling import SMOTE,ADASYN
 from imblearn.under_sampling import RandomUnderSampler
 from collections import Counter
+import multiprocessing as mp
+
 
 filename = "data/trainingObamaRomneytweets.xlsx"
-
+cores = mp.cpu_count()
 for sheet in ['Romney','Obama']:
-    print ("Sentiment Analysis on :",sheet)
+    #print ("Sentiment Analysis on :",sheet)
     columns = [3, 4]
     df = pd.read_excel(filename, sheet_name=sheet, usecols=columns, header=1, names=['Tweet', 'Sentiment'])
     df = preProcessing(df).df
 
     corpus = [" ".join(tweet) for tweet in df["Tweet"]]
     labels = [int(sentiment) for sentiment in df["Sentiment"]]
+    #print("Before: ", df.shape)
 
     kf = StratifiedKFold(n_splits=10)
-    models = ['LogisticRegression'] #'NaiveBayes','LogisticRegression','FeedForward','RNN', 'SVM'
-    feature = 'TF_IDF'
+    models = ['CNN'] #'NaiveBayes','LogisticRegression','FeedForward','RNN', 'SVM','CNN'
+    feature = 'WordEmbeddings'
     total = np.zeros([len(models),10]) # Accuracy, Precision, Recall, FScore
     prf = np.zeros([len(models),3,3])
     fold=0
@@ -55,8 +59,11 @@ for sheet in ['Romney','Obama']:
             train_corpus, test_corpus,vocab_size,max_length = Word2Vec(X_train,X_test,y_train,y_test)
 
 
+
+
+
         #print("Before Over Sampling: ",Counter(y_train))
-        #sm = SMOTE(random_state=42)
+        #sm = SMOTE(n_jobs=cores)
         #train_corpus, y_train = sm.fit_resample(train_corpus, y_train)
         #print("After Over Sampling: ", Counter(y_train))
 
@@ -80,13 +87,13 @@ for sheet in ['Romney','Obama']:
                 model = FeedForward(train_corpus, test_corpus,
                                     to_categorical(y_train_one),to_categorical(y_test_one))
                 result = model.evaluate()
-            elif v == 'RNN':
+            elif v == 'CNN':
                 y_train_one = np.array(y_train)
                 y_test_one = np.array(y_test)
                 y_train_one -= y_train_one.min()
                 y_test_one -= y_test_one.min()
 
-                model = RNN(train_corpus, test_corpus,
+                model = CNN(train_corpus, test_corpus,
                                       to_categorical(y_train_one), to_categorical(y_test_one),
                                       vocab_size, feature, max_length, embed_matrix)
                 result = model.evaluate()

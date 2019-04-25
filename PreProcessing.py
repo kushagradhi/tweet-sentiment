@@ -19,10 +19,10 @@ class preProcessing:
         df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("<.*?>", ' ', x))
 
         # Remove URLs
-        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("https?://[A-Za-z0-9./]+", '', x))
+        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub("https?://[A-Za-z0-9./]+", ' ', x))
 
         # Remove URLs
-        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub(r'[^\w\s]', '', x))
+        df['Tweet'] = df['Tweet'].apply(lambda x: re.sub(r'[^\w\s]', ' ', x))
 
         # remove stopwords
         stopwords_english = stopwords.words("english")
@@ -53,3 +53,4 @@ class preProcessing:
         for token in tokens:
             result.extend([porter.stem(token)])
         return result
+
