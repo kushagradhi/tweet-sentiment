@@ -30,8 +30,8 @@ for sheet in ['Romney','Obama']:
     #print("Before: ", df.shape)
 
     kf = StratifiedKFold(n_splits=10)
-    models = ['CNN'] #'NaiveBayes','LogisticRegression','FeedForward','RNN', 'SVM','CNN'
-    feature = 'WordEmbeddings'
+    models = ['SVM'] #'NaiveBayes','LogisticRegression','FeedForward','RNN', 'SVM','CNN'
+    feature = 'TF_IDF'
     total = np.zeros([len(models),10]) # Accuracy, Precision, Recall, FScore
     prf = np.zeros([len(models),3,3])
     fold=0
